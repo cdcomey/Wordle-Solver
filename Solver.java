@@ -12,18 +12,31 @@ import java.util.Random;
 public class Solver{
 	public static void main(String[] args){
 		ArrayList<String> words = new ArrayList<String>();
+		ArrayList<String> expandedWords = new ArrayList<String>();
 
 		// 'shorter list.txt' is the list of all possible correct answers for Wordle
 		// it is the 'shorter' of the two text files since Wordle accepts certain words that it will never set as the correct word
 		// those extra words, along with the normal ones, are stored in a separate text file
-		File file = new File("shorter list.txt");
+		File smallerFile = new File("shorter list.txt");
+		File largerFile = new File("five letter words.txt");
 
 		// read the contents from the file and store them in an array list
-		try (FileInputStream fis = new FileInputStream(file); BufferedInputStream bis = new BufferedInputStream(fis)){
+		try (FileInputStream fis = new FileInputStream(smallerFile); BufferedInputStream bis = new BufferedInputStream(fis)){
 			String s = new String(bis.readAllBytes());
 			String[] arr = s.split("\n");
 			for (String each : arr)
 				words.add(each);
+		} catch (FileNotFoundException ex){
+			System.err.println("file not found");
+		} catch (IOException ex){
+			System.err.println("IO exception");
+		}
+
+		try (FileInputStream fis = new FileInputStream(largerFile); BufferedInputStream bis = new BufferedInputStream(fis)){
+			String s = new String(bis.readAllBytes());
+			String[] arr = s.split("\n");
+			for (String each : arr)
+				expandedWords.add(each);
 		} catch (FileNotFoundException ex){
 			System.err.println("file not found");
 		} catch (IOException ex){
@@ -37,17 +50,19 @@ public class Solver{
 		// the program will then recommend the best guess
 		// the auto solver guesses each possible Wordle answer and prints the number of guesses it took
 		System.out.print("Manual or auto solver (y/n)? ");
-		String choice = kb.next();
-		boolean autoSolver = choice.charAt(0) == 'n';
+		boolean autoSolver = kb.next().charAt(0) == 'n';
 
 		// manual solver
 		if (!autoSolver){
+			System.out.print("Allow obscure words as guesses (y/n)? ");
+			boolean allowObscureWords = kb.next().charAt(0) == 'y';
+			int numberOfGuesses = 0;
 			while (true){
 				System.out.print("Enter your guess: ");
 				String guess = kb.next();
 
 				// alows the user to prematurely exit the program
-				// exit is chosen because it is only 4 letters, and every Wordle word is 5
+				// 'exit' is chosen because it is only 4 letters, and every Wordle word is 5, so it can never be confused for a valid guess
 				if (guess.equals("exit"))
 					break;
 
@@ -55,6 +70,13 @@ public class Solver{
 				System.out.print("Enter your result as a sequence of numbers,\n" + 
 					"where 0 = gray, 1 = yellow, 2 = green (eg 01021): ");
 				String result = kb.next();
+				numberOfGuesses++;
+
+				if (result.equals("22222")){
+					System.out.println("The word was correctly guessed in " + numberOfGuesses + (numberOfGuesses == 1 ? " try" : " tries"));
+					return;
+				}
+
 
 				// iterate through every word it could possibly be
 				for (int i = 0; i < words.size(); i++){
@@ -115,7 +137,12 @@ public class Solver{
 				// select the highest-scoring word to recommend as the best next guess
 				int high = 0;
 				String bestWord = "";
-				for (String word : words){
+				ArrayList<String> possibleWords = new ArrayList<String>();
+				if (allowObscureWords)
+					possibleWords = expandedWords;
+				else
+					possibleWords = words;
+				for (String word : possibleWords){
 					ArrayList<Character> usedLetters = new ArrayList<Character>();
 					int score = 0;
 					
@@ -140,8 +167,8 @@ public class Solver{
 					}
 					
 					// the list of remaining possible words is only printed when there is a reasonable number of them left for the user to look through manually
-					if (words.size() <= 20)
-						System.out.println(word + " " + score);
+					if (words.size() > 1 && words.size() <= 20 && words.contains(word))
+						System.out.println(word);
 
 					// determine the best next guess
 					if (score > high){
@@ -150,7 +177,15 @@ public class Solver{
 					}
 				}
 				
-				System.out.println("best word is " + bestWord + " at " + high);
+				if (words.size() == 0){
+					System.out.println("fatal: possible word list was completely exhausted. Unable to determine the correct word");
+					return;
+				} else if (words.size() == 1){
+					System.out.println("the only possible remaining word is " + words.get(0));
+				} else {
+					System.out.println(words.size() + " possible words left");
+					System.out.println("best next guess is " + bestWord + ", scoring " + high + " points");
+				}
 			}
 		} else if (autoSolver){
 			// the auto-solver solves every possible Wordle word and prints out the results
