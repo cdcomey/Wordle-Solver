@@ -59,6 +59,11 @@ public class Solver{
 			int numberOfGuesses = 0;
 			while (true){
 				
+				ArrayList<String> possibleWords = new ArrayList<String>();
+				if (allowObscureWords)
+					possibleWords = expandedWords;
+				else
+					possibleWords = words;
 				
 				// the next part of the solver assesses what the best next guess would be
 				// it does so by adding up all occurences of every letter in the corresponding place of every possible correct word
@@ -75,16 +80,14 @@ public class Solver{
 				}
 				
 				// select the highest-scoring word to recommend as the best next guess
-				int high = 0;
-				String bestWord = "";
-				ArrayList<String> possibleWords = new ArrayList<String>();
-				if (allowObscureWords)
-					possibleWords = expandedWords;
-				else
-					possibleWords = words;
+				int highestObscureScore = 0;
+				int highestCommonScore = 0;
+				String bestObscureWord = "";
+				String bestCommonWord = "";
 				for (String word : possibleWords){
 					ArrayList<Character> usedLetters = new ArrayList<Character>();
 					int score = 0;
+					boolean isObscureWord = allowObscureWords && !words.contains(word);
 					
 					// words with more than one of the same letter get unreasonably large scores when a letter is known to be somewhere in the word
 					// those words actually give less information that ones with five unique letters, so their scores are penalized to discourage them
@@ -107,27 +110,42 @@ public class Solver{
 					}
 					
 					// the list of remaining possible words is only printed when there is a reasonable number of them left for the user to look through manually
-					if (words.size() > 1 && words.size() <= 20 && words.contains(word))
+					// the word should also not be printed if it is the only possible word remaining, or if it is not possible to be the answer
+					if (words.size() > 1 && words.size() <= 20 && !isObscureWord){
 						System.out.println(word);
+					}
+
+					// System.out.println(word + " " + score + " " + isObscureWord);
 
 					// determine the best next guess
-					if (score > high){
-						high = score;
-						bestWord = word;
+					if (isObscureWord && score > highestObscureScore){
+						highestObscureScore = score;
+						bestObscureWord = word;
+						// System.out.println("new best obscure word is " + word);
+					} else if (!isObscureWord && score > highestCommonScore){
+						highestCommonScore = score;
+						bestCommonWord = word;
+						// System.out.println("new best common word is " + word);
 					}
 				}
 				
 				if (words.size() == 0){
-					System.out.println("fatal: possible word list was completely exhausted. Unable to determine the correct word");
+					System.out.println("\nfatal: possible word list was completely exhausted. Unable to determine the correct word");
 					return;
 				} else if (words.size() == 1){
-					System.out.println("the only possible remaining word is " + words.get(0));
+					System.out.println("\nthe only possible remaining word is " + words.get(0));
 				} else {
-					System.out.println(words.size() + " possible words left");
-					System.out.println("best next guess is " + bestWord + ", scoring " + high + " points");
+					System.out.println("\n" + words.size() + " possible words left");
+
+					if (highestCommonScore <= highestObscureScore){
+						System.out.println("best guess is " + bestObscureWord + ", scoring " + highestObscureScore + " points");
+						System.out.println("best normal guess is " + bestCommonWord + ", scoring " + highestCommonScore + " points");
+					} else {
+						System.out.println("best next guess is " + bestCommonWord + ", scoring " + highestCommonScore + " points");
+					}
 				}
 
-				System.out.print("Enter your guess: ");
+				System.out.print("\nEnter your guess: ");
 				String guess = kb.next();
 
 				// alows the user to prematurely exit the program
