@@ -15,6 +15,7 @@ public class Solver{
 
 		// 'shorter list.txt' is the list of all possible correct answers for Wordle
 		// it is the 'shorter' of the two text files since Wordle accepts certain words that it will never set as the correct word
+		// those extra words, along with the normal ones, are stored in a separate text file
 		File file = new File("shorter list.txt");
 
 		// read the contents from the file and store them in an array list

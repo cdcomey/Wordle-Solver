@@ -1,0 +1,5 @@
+﻿Wordle is a word-guessing game that requires the player to guess a hidden word within six tries. For each guess, you are told whether each letter in your guess is in the hidden word, and if it is in the right place.
+
+This program has two modes, manual and automatic. Manual is an assistant for solving the puzzle. For each try, it evaluates which word reveals the most information when guessed, and recommends it to the player. The player enters the recommended word, or another of their choosing, into the game and tells the program the result. The program uses this information to eliminate words that could not be the hidden word given the new information, and recommends a new word to guess until there is only one option left.
+
+The automatic mode essentially plays the game by itself for every possible word in the game’s pool of choices. It returns only the word and the number of guesses it took to determine it. This mode is mainly for gathering statistics, particularly how many guesses the program would need to determine a certain word.
