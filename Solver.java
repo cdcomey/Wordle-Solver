@@ -15,10 +15,10 @@ public class Solver{
 		ArrayList<String> expandedWords = new ArrayList<String>();
 
 		// 'shorter list.txt' is the list of all possible correct answers for Wordle
-		// it is the 'shorter' of the two text files since Wordle accepts certain words that it will never set as the correct word
+		// it is the shorter of the two text files since Wordle accepts certain words that it will never set as the correct word
 		// those extra words, along with the normal ones, are stored in a separate text file
-		File smallerFile = new File("shorter list.txt");
-		File largerFile = new File("five letter words.txt");
+		File smallerFile = new File("word list.txt");
+		File largerFile = new File("expanded word list.txt");
 
 		// read the contents from the file and store them in an array list
 		try (FileInputStream fis = new FileInputStream(smallerFile); BufferedInputStream bis = new BufferedInputStream(fis)){
@@ -58,67 +58,7 @@ public class Solver{
 			boolean allowObscureWords = kb.next().charAt(0) == 'y';
 			int numberOfGuesses = 0;
 			while (true){
-				System.out.print("Enter your guess: ");
-				String guess = kb.next();
-
-				// alows the user to prematurely exit the program
-				// 'exit' is chosen because it is only 4 letters, and every Wordle word is 5, so it can never be confused for a valid guess
-				if (guess.equals("exit"))
-					break;
-
-				// the user puts their word into Wordle, and translates the feedback to the program
-				System.out.print("Enter your result as a sequence of numbers,\n" + 
-					"where 0 = gray, 1 = yellow, 2 = green (eg 01021): ");
-				String result = kb.next();
-				numberOfGuesses++;
-
-				if (result.equals("22222")){
-					System.out.println("The word was correctly guessed in " + numberOfGuesses + (numberOfGuesses == 1 ? " try" : " tries"));
-					return;
-				}
-
-
-				// iterate through every word it could possibly be
-				for (int i = 0; i < words.size(); i++){
-					boolean willRemove = false;
-
-					// iterate through every digit of the feedback
-					for (int j = 0; j < 5; j++){
-						String word = words.get(i);
-						switch (result.charAt(j)){
-							case '0':
-								// if the word contains a letter we know the answer does not, that word cannot be correct
-								if (word.indexOf(guess.charAt(j)) >= 0 && result.charAt(word.indexOf(guess.charAt(j))) != '2')
-									willRemove = true;
-								break;
-							
-							case '1':
-								// if the word does not have a letter we know is in the answer, that word cannot be correct
-								// also, if the word has the letter in the guessed space, and the answer does not, that word cannot be correct
-								if (word.indexOf(guess.charAt(j)) < 0 || word.charAt(j) == guess.charAt(j))
-									willRemove = true;
-								break;
-							
-							case '2':
-								// if the word does not have a letter in the exact space we know the answer does, that word cannot be correct
-								if (word.charAt(j) != guess.charAt(j))
-									willRemove = true;
-									break;
-									
-							default:
-								break;
-						}
-						
-						if (willRemove)
-							break;
-					}
-					
-					// remove the word if it determined it could not be correct
-					if (willRemove){
-						words.remove(i);
-						i--;
-					}
-				}
+				
 				
 				// the next part of the solver assesses what the best next guess would be
 				// it does so by adding up all occurences of every letter in the corresponding place of every possible correct word
@@ -185,6 +125,68 @@ public class Solver{
 				} else {
 					System.out.println(words.size() + " possible words left");
 					System.out.println("best next guess is " + bestWord + ", scoring " + high + " points");
+				}
+
+				System.out.print("Enter your guess: ");
+				String guess = kb.next();
+
+				// alows the user to prematurely exit the program
+				// 'exit' is chosen because it is only 4 letters, and every Wordle word is 5, so it can never be confused for a valid guess
+				if (guess.equals("exit"))
+					break;
+
+				// the user puts their word into Wordle, and translates the feedback to the program
+				System.out.print("Enter your result as a sequence of numbers,\n" + 
+					"where 0 = gray, 1 = yellow, 2 = green (eg 01021): ");
+				String result = kb.next();
+				numberOfGuesses++;
+
+				if (result.equals("22222")){
+					System.out.println("The word was correctly guessed in " + numberOfGuesses + (numberOfGuesses == 1 ? " try" : " tries"));
+					return;
+				}
+
+
+				// iterate through every word it could possibly be
+				for (int i = 0; i < words.size(); i++){
+					boolean willRemove = false;
+
+					// iterate through every digit of the feedback
+					for (int j = 0; j < 5; j++){
+						String word = words.get(i);
+						switch (result.charAt(j)){
+							case '0':
+								// if the word contains a letter we know the answer does not, that word cannot be correct
+								if (word.indexOf(guess.charAt(j)) >= 0 && result.charAt(word.indexOf(guess.charAt(j))) != '2')
+									willRemove = true;
+								break;
+							
+							case '1':
+								// if the word does not have a letter we know is in the answer, that word cannot be correct
+								// also, if the word has the letter in the guessed space, and the answer does not, that word cannot be correct
+								if (word.indexOf(guess.charAt(j)) < 0 || word.charAt(j) == guess.charAt(j))
+									willRemove = true;
+								break;
+							
+							case '2':
+								// if the word does not have a letter in the exact space we know the answer does, that word cannot be correct
+								if (word.charAt(j) != guess.charAt(j))
+									willRemove = true;
+									break;
+									
+							default:
+								break;
+						}
+						
+						if (willRemove)
+							break;
+					}
+					
+					// remove the word if it determined it could not be correct
+					if (willRemove){
+						words.remove(i);
+						i--;
+					}
 				}
 			}
 		} else if (autoSolver){
